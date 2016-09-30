@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="11201" systemVersion="15G31" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" colorMatched="YES" initialViewController="BYZ-38-t0r">
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="11161"/>
+        <capability name="Aspect ratio constraints" minToolsVersion="5.1"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <scenes>
+        <!--View Controller-->
+        <scene sceneID="tne-QT-ifu">
+            <objects>
+                <viewController id="BYZ-38-t0r" customClass="ViewController" customModule="ColorPicker" customModuleProvider="target" sceneMemberID="viewController">
+                    <layoutGuides>
+                        <viewControllerLayoutGuide type="top" id="y3c-jy-aDJ"/>
+                        <viewControllerLayoutGuide type="bottom" id="wfy-db-euE"/>
+                    </layoutGuides>
+                    <view key="view" contentMode="scaleToFill" id="8bC-Xf-vdC">
+                        <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="DBI-e6-sBM">
+                                <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" secondItem="DBI-e6-sBM" secondAttribute="height" multiplier="1:1" id="JXv-R7-ml8"/>
+                                </constraints>
+                            </view>
+                            <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="8gu-PU-dHa" customClass="NSGColorWheel" customModule="ColorPicker" customModuleProvider="target">
+                                <constraints>
+                                    <constraint firstAttribute="width" secondItem="8gu-PU-dHa" secondAttribute="height" multiplier="1:1" id="N41-Ar-lA8"/>
+                                </constraints>
+                            </imageView>
+                            <slider opaque="NO" contentMode="scaleToFill" misplaced="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" value="0.5" minValue="0.0" maxValue="1" translatesAutoresizingMaskIntoConstraints="NO" id="Ymj-gQ-2iO">
+                                <frame key="frameInset" minX="35" minY="554" width="304" height="51"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="300" id="dAv-wJ-qKg"/>
+                                    <constraint firstAttribute="height" constant="50" id="eJC-DB-5WG"/>
+                                </constraints>
+                            </slider>
+                        </subviews>
+                        <color key="backgroundColor" white="0.0" alpha="1" colorSpace="calibratedWhite"/>
+                        <constraints>
+                            <constraint firstItem="DBI-e6-sBM" firstAttribute="centerX" secondItem="8bC-Xf-vdC" secondAttribute="centerX" id="Cbn-jd-cJp"/>
+                            <constraint firstItem="8gu-PU-dHa" firstAttribute="centerX" secondItem="8bC-Xf-vdC" secondAttribute="centerX" id="Jk0-fS-qpv"/>
+                            <constraint firstItem="DBI-e6-sBM" firstAttribute="leading" secondItem="8bC-Xf-vdC" secondAttribute="leading" constant="15" id="KiA-Zf-lWz"/>
+                            <constraint firstItem="Ymj-gQ-2iO" firstAttribute="centerX" secondItem="8bC-Xf-vdC" secondAttribute="centerX" id="Lqv-zb-qcW"/>
+                            <constraint firstItem="8gu-PU-dHa" firstAttribute="leading" secondItem="8bC-Xf-vdC" secondAttribute="leading" constant="45" id="SdY-4y-LWW"/>
+                            <constraint firstItem="Ymj-gQ-2iO" firstAttribute="top" secondItem="DBI-e6-sBM" secondAttribute="bottom" constant="40" id="lL1-q7-80t"/>
+                            <constraint firstItem="8gu-PU-dHa" firstAttribute="centerY" secondItem="8bC-Xf-vdC" secondAttribute="centerY" id="ujQ-X7-yWp"/>
+                            <constraint firstItem="DBI-e6-sBM" firstAttribute="centerY" secondItem="8bC-Xf-vdC" secondAttribute="centerY" id="xPb-cV-KKZ"/>
+                        </constraints>
+                    </view>
+                    <connections>
+                        <outlet property="borderView" destination="DBI-e6-sBM" id="z91-yx-jGC"/>
+                        <outlet property="brightnessSlider" destination="Ymj-gQ-2iO" id="MS5-bB-W22"/>
+                        <outlet property="colorWheel" destination="8gu-PU-dHa" id="73Y-qV-6xK"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="136.80000000000001" y="112.89355322338831"/>
+        </scene>
+    </scenes>
+</document>
