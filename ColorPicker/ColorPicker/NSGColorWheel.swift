@@ -11,7 +11,7 @@ import Darwin
 import UIKit
 
 protocol NSGColorWheelDelegate {
-    func colorChanged(color : UIColor) 
+    func colorChanged(color : UIColor)
 }
 
 class NSGColorWheel : UIImageView {
@@ -43,15 +43,16 @@ class NSGColorWheel : UIImageView {
     }
     
     func commonInit() {
+        
         contentMode = .scaleAspectFit
-        image = UIImage(named: "ColorWheel")
+        
         backgroundColor = .gray
         layer.masksToBounds = true
-
+        
         selectorView.layer.masksToBounds = true
         selectorView.layer.borderColor = UIColor.white.cgColor
         selectorView.layer.borderWidth = 1
-
+        
         self.clipsToBounds = false
         isUserInteractionEnabled = true
     }
@@ -60,8 +61,11 @@ class NSGColorWheel : UIImageView {
         super.layoutSubviews()
         layer.cornerRadius = frame.height / 2
         selectorView.layer.cornerRadius = selectorHeight / 2
-
+        let generator = ColorWheelGenerator(delegate: self)
+        generator.drawColorWheel()
+        
         if isInitialLoad {
+            
             isInitialLoad = false
             selectorView.frame = CGRect(x: (frame.width / 2) - selectorHeight / 2, y: (frame.height / 2) - selectorHeight / 2, width: selectorHeight, height: selectorHeight)
             addSubview(selectorView)
@@ -96,15 +100,15 @@ class NSGColorWheel : UIImageView {
     override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
         if let firstTouch = touches.first {
             let mousePoint = firstTouch.location(in: self)
-
             
-                updateSelectorView(point: mousePoint)
+            
+            updateSelectorView(point: mousePoint)
         }
         
     }
     
     func updateSelectorView(point : CGPoint) {
-
+        
         let center = CGPoint(x: frame.width * 0.5, y: frame.height * 0.5)
         
         let radius = frame.height * 0.5
@@ -133,6 +137,8 @@ class NSGColorWheel : UIImageView {
         
         angle += CGFloat(M_PI) * 0.5
         
+        print(angle)
+        
         let x = center.x + dist * sin(angle)
         let y = center.y + dist * cos(angle)
         
@@ -140,14 +146,210 @@ class NSGColorWheel : UIImageView {
         selectorView.frame.origin.y = y - (selectorHeight / 2)
         
         let midPoint = CGPoint(x: selectorView.frame.midX, y: selectorView.frame.midY)
-
+        
         setColorForSelector(position: midPoint)
     }
     
     func setColorForSelector(position : CGPoint) {
-        selectedColor = self.image?.getPixelColor(pos: position, imageViewFrame: frame)
+        selectedColor = self.getUIColorForPointCoordinate(point: position)
     }
+    
+    
+}
 
+extension NSGColorWheel : ColorWheelGeneratorDelegate {
+    internal var pixelWidth: Int {
+        get {
+            let scale = UIScreen.main.scale
+            return Int(scale * self.frame.width)
+        }
+        
+    }
+    
+    internal var pixelHeight: Int {
+        get {
+            let scale = UIScreen.main.scale
+            return Int(scale * self.frame.height)
+        }
+        
+    }
+    
+    internal var pixelRadius: Int {
+        get {
+            return (pixelWidth > pixelHeight ? pixelHeight : pixelWidth) / 2
+        }
+        
+    }
+    
+    func colorWheelImageDidFinishLoading(with colorWheelImage: UIImage) {
+        self.image = colorWheelImage
+    }
+    
+    func getRGBForPixelCoordinate(x: Int, y: Int) -> RGB32 {
+        
+        let centerX = pixelWidth / 2
+        let centerY = pixelHeight / 2
+        
+        let dx = Double(abs(centerX - x))
+        let dy = Double(abs(y - centerY))
+        var angle = atan(dy / dx)
+        let radius = Double(pixelRadius)
+        
+        if angle.isNaN {
+            angle = 0.0
+        }
+        
+        let dist = sqrt(pow(dx, 2) + pow(dy, 2))
+        
+        if x < centerX {
+            angle = (M_PI) - angle
+        }
+        
+        if y > centerY {
+            angle = 2 * (M_PI) - angle
+        }
+        
+        if angle >= 0 && angle < (2 * M_PI / 3) {
+            angle = angle / 2
+        } else if angle >= (2 * M_PI / 3) && angle < (3 * M_PI / 2) {
+            angle -= (M_PI / 3) * 7 / 6
+            
+            angle = angle * 6 / 5
+        } else if angle >= (3 * M_PI / 2) {
+            angle -= (M_PI / 2)
+            angle = angle * 4 / 3
+            
+        }
+        
+        angle = angle / (2 * M_PI)
+        
+        
+        if dist >= radius {
+            return RGB(r: 0, g: 0, b: 0, a: 0).rgb32
+        } else {
+            let hsv = HSV(h: CGFloat(angle), s: CGFloat(dist / radius), v: CGFloat(1), a: CGFloat(1))
+            return hsv.rgbValue.rgb32
+        }
+        
+    }
+    
+    func getUIColorForPointCoordinate(point: CGPoint) -> UIColor {
+        let scale = UIScreen.main.scale
+        
+        let relativeX =  point.x * scale
+        let relativeY = point.y * scale
+        
+        let rgb32 = getRGBForPixelCoordinate(x: Int(relativeX), y: Int(relativeY))
+        let rgb = RGB(r: Double(rgb32.r) / 255.0, g: Double(rgb32.g) / 255.0, b: Double(rgb32.b) / 255.0, a: Double(rgb32.a) / 255.0)
+        
+        return rgb.uiColor
+    }
+    
+}
+
+protocol ColorWheelGeneratorDelegate {
+    var pixelRadius : Int { get }
+    var pixelWidth : Int { get }
+    var pixelHeight : Int { get }
+    
+    func colorWheelImageDidFinishLoading(with colorWheelImage: UIImage)
+    func getRGBForPixelCoordinate(x: Int, y: Int) -> RGB32
+    func getUIColorForPointCoordinate(point: CGPoint) -> UIColor
+}
+
+class ColorWheelGenerator : NSObject {
+    
+    init(delegate: ColorWheelGeneratorDelegate) {
+        
+        self.delegate = delegate
+        self.bytesPerPixel = 4
+        self.totalBytes = bytesPerPixel * delegate.pixelHeight * delegate.pixelWidth
+        
+        super.init()
+    }
+    
+    let bytesPerPixel : Int
+    
+    var totalBytes : CLong
+    
+    var delegate : ColorWheelGeneratorDelegate
+    
+    func drawColorWheel() {
+        
+        DispatchQueue.global().async {
+            
+            let context = self.getRGBABitmapContext()
+            
+            guard let data = context.data else {
+                fatalError("Error with image data. Pixels may be 0")
+                
+            }
+            
+            let bitmap = data.bindMemory(to: UInt8.self, capacity: self.totalBytes)
+            
+            var offset = 0
+            
+            for y in 0 ..< self.delegate.pixelHeight {
+                
+                for x in 0 ..< self.delegate.pixelWidth {
+                    
+                    let rgb = self.delegate.getRGBForPixelCoordinate(x: x, y: y)
+                    bitmap[offset] = rgb.a
+                    bitmap[offset + 1] = rgb.r
+                    bitmap[offset + 2] = rgb.g
+                    bitmap[offset + 3] = rgb.b
+                    
+                    offset += self.bytesPerPixel
+                }
+                
+            }
+            
+            
+            let bitmapBytesPerRow = self.delegate.pixelWidth * self.bytesPerPixel
+            let bitmapInfo = CGBitmapInfo(rawValue: CGImageAlphaInfo.premultipliedFirst.rawValue)
+            let colorSpace = CGColorSpaceCreateDeviceRGB()
+            
+            guard let colorWheelContext = CGContext(data: bitmap, width: self.delegate.pixelWidth, height: self.delegate.pixelHeight, bitsPerComponent: 8, bytesPerRow: bitmapBytesPerRow, space: colorSpace, bitmapInfo: bitmapInfo.rawValue) else {
+                fatalError("Error creating image context. Pixels may be 0")
+            }
+            
+            guard let image = colorWheelContext.makeImage() else {
+                fatalError("Error creating image from context. Pixels may be 0")
+                
+            }
+            
+            let colorWheelImage = UIImage(cgImage: image)
+            
+            DispatchQueue.main.async {
+                self.delegate.colorWheelImageDidFinishLoading(with: colorWheelImage)
+            }
+        }
+    }
+    
+    
+    func getRGBABitmapContext() -> CGContext {
+        
+        let bytesPerRow = bytesPerPixel * delegate.pixelWidth
+        
+        let totalBytes = bytesPerRow * delegate.pixelHeight
+        
+        let colorSpace = CGColorSpaceCreateDeviceRGB()
+        
+        let bitmapData = malloc(totalBytes)
+        
+        let bitmapInfo = CGBitmapInfo(rawValue: CGImageAlphaInfo.premultipliedFirst.rawValue)
+        
+        guard let context = CGContext(data: bitmapData, width: delegate.pixelWidth, height: delegate.pixelHeight, bitsPerComponent: 8, bytesPerRow: bytesPerRow, space: colorSpace, bitmapInfo: bitmapInfo.rawValue) else {
+            fatalError("Error creating image context. Pixels may be 0")
+        }
+        
+        return context
+    }
+    
+    
+    
+    
+    
 }
 
 let colorWheelPixels : CGFloat = 730.0
@@ -157,6 +359,8 @@ extension UIImage {
         
         let relativeX =  pos.x * colorWheelPixels / imageViewFrame.width
         let relativeY = pos.y * colorWheelPixels / imageViewFrame.height
+        
+        
         
         let pixelCoordinate = CGPoint(x: relativeX, y: relativeY)
         let pixelData = self.cgImage!.dataProvider!.data
@@ -171,5 +375,5 @@ extension UIImage {
         let a = CGFloat(data[pixelIndex+3]) / CGFloat(255.0)
         
         return UIColor(red: r, green: g, blue: b, alpha: a)
-    }  
+    }
 }
